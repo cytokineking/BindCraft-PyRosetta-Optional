@@ -80,12 +80,12 @@ if [ "$install_pyrosetta" = true ]; then
     echo -e "Installing with PyRosetta\n"
     if [ -n "$cuda" ]; then
         CONDA_OVERRIDE_CUDA="$cuda" $pkg_manager install \
-            $BASE_PACKAGES pyrosetta "jaxlib=0.6.0=*cuda*" "jax=0.6.0" cuda-nvcc cudnn cudatoolkit=$cuda\
+            $BASE_PACKAGES pyrosetta "jaxlib=0.6.0=*cuda*" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
             -c conda-forge -c nvidia -c "https://conda.rosettacommons.org" -y \
             || { echo -e "Error: Failed to install conda packages with PyRosetta."; exit 1; }
     else
         $pkg_manager install \
-            $BASE_PACKAGES pyrosetta "jaxlib=0.6.0" "jax=0.6.0" cuda-nvcc cudnn cudatoolkit=$cuda\
+            $BASE_PACKAGES pyrosetta "jaxlib=0.6.0" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
             -c conda-forge -c nvidia -c "https://conda.rosettacommons.org" -y \
             || { echo -e "Error: Failed to install conda packages with PyRosetta."; exit 1; }
     fi
@@ -93,12 +93,12 @@ else
     echo -e "Installing without PyRosetta\n"
     if [ -n "$cuda" ]; then
         CONDA_OVERRIDE_CUDA="$cuda" $pkg_manager install \
-            $BASE_PACKAGES "jaxlib=0.6.0=*cuda*" "jax=0.6.0" cuda-nvcc cudnn cudatoolkit=$cuda\
+            $BASE_PACKAGES "jaxlib=0.6.0=*cuda*" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
             -c conda-forge -c nvidia -y \
             || { echo -e "Error: Failed to install conda packages without PyRosetta."; exit 1; }
     else
         $pkg_manager install \
-            $BASE_PACKAGES "jaxlib=0.6.0" "jax=0.6.0" cuda-nvcc cudnn cudatoolkit=$cuda\
+            $BASE_PACKAGES "jaxlib=0.6.0" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
             -c conda-forge -c nvidia -y \
             || { echo -e "Error: Failed to install conda packages without PyRosetta."; exit 1; }
     fi
@@ -125,6 +125,13 @@ if [ ${#missing_packages[@]} -ne 0 ]; then
     done
     exit 1
 fi
+
+# Clean up conda's OpenCL packages to prevent OpenMM segfaults
+echo -e "Cleaning up conda OpenCL packages to prevent OpenMM conflicts\n"
+$pkg_manager remove -y ocl-icd opencl-headers cuda-opencl cuda-opencl-dev 2>/dev/null || true
+$pkg_manager install -y -c conda-forge ocl-icd-system || true
+rm -f "$CONDA_PREFIX/lib/libOpenCL.so"* 2>/dev/null || true
+echo -e "OpenCL cleanup completed\n"
 
 # install ColabDesign
 echo -e "Installing ColabDesign\n"
