@@ -84,11 +84,11 @@ if __name__ == "__main__":
             sys.exit(1)
             
     # --- OpenMM Relaxation ---
-    print(f"\n--- Starting OpenMM Relaxation ---")
+    print(f"\n--- Starting OpenMM Relaxation (CUDA-only) ---")
     print(f"Calling openmm_relax function for {openmm_output_pdb_path}...")
     try:
         # Call the imported openmm_relax function
-        used_platform = openmm_relax(args.input_pdb_path, openmm_output_pdb_path, use_gpu_relax=True) # Attempt GPU relaxation (CUDA -> OpenCL -> CPU fallback)
+        used_platform = openmm_relax(args.input_pdb_path, openmm_output_pdb_path, use_gpu_relax=True)
         print(f"openmm_relax function completed. Platform used: {used_platform}")
         if os.path.exists(openmm_output_pdb_path):
             print(f"OpenMM Relaxed PDB saved to: {openmm_output_pdb_path}")
@@ -96,7 +96,7 @@ if __name__ == "__main__":
             print(f"Warning: OpenMM Output PDB file was not created at {openmm_output_pdb_path}.")
 
     except Exception as e:
-        print(f"--- Test Script: Error during openmm_relax execution (forced CPU) ---")
+        print(f"--- Test Script: Error during openmm_relax execution (CUDA-only) ---")
         print(f"An exception occurred: {type(e).__name__}: {e}")
         import traceback
         traceback.print_exc()

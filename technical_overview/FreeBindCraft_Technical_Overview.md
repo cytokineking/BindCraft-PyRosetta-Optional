@@ -70,7 +70,7 @@ File: `functions/pr_alternative_utils.py`
 - Optional short MD “shakes”: applied to the first two stages to help escape poor contacts.
 - Minimization: chunked L-BFGS stages with early-stopping on negligible energy improvement; accept-to-best bookkeeping across stages.
 - Post-processing: align all-CA to input, copy original B-factors, and clean PDB records.
-- Platform selection: prefers GPU via OpenCL; runs via a subprocess helper with retries to ensure clean driver/runtime teardown between designs.
+- Platform selection: runs via a subprocess helper with retries to ensure clean driver/runtime teardown between designs.
 
 Expected behavior: OpenMM relax is typically 2–4× faster than CPU FastRelax, and sufficient for the pipeline’s goal of removing clashes prior to interface scoring. It intentionally limits backbone drift to respect AlphaFold predictions.
 

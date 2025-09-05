@@ -272,32 +272,3 @@ See `extras/README.md` for detailed usage examples and options.
 ## Contributing
 
 Pull requests are welcome.
-
-## Known Issues
-
-- OpenMM GPU backend selection (OpenCL preferred over CUDA): We deliberately prefer OpenCL over CUDA for OpenMM relax because we have not been able to get the CUDA backend reliably working in our environments. OpenCL works, but it is less stable over long runs, so the relax step is executed in a subprocess for isolation and reliability. It also produces JIT log spam; see the next item for a suppression example.
-- OpenCL JIT "log spam": You may see repeated lines such as "Failed to read file: /tmp/dep-76532a.d" emitted to stdout/stderr during OpenCL kernel builds.
-  - Recommend line buffering to keep logs responsive when filtering
-    - Combined output (preferred when piping/teeing):
-    ```bash
-    python -u ./bindcraft.py \
-      --settings ./settings_target/your_target.json \
-      --filters ./settings_filters/default_filters.json \
-      --advanced ./settings_advanced/default_4stage_multimer.json \
-      --no-pyrosetta \
-      |& stdbuf -oL -eL grep -v -E 'Failed to read file: .*/dep-[0-9a-fA-F]+\.d([[:space:]]*)?$' \
-      | stdbuf -oL tee -a ./output/your_target.log
-    ```
-    - Stderr-only (no further pipes):
-    ```bash
-    python -u ./bindcraft.py \
-      --settings ./settings_target/your_target.json \
-      --filters ./settings_filters/default_filters.json \
-      --advanced ./settings_advanced/default_4stage_multimer.json \
-      --no-pyrosetta \
-      2> >(stdbuf -oL -eL grep -v -E 'Failed to read file: .*/dep-[0-9a-fA-F]+\.d([[:space:]]*)?$' >&2)
-    ```
-    - Notes:
-      - `stdbuf` forces line buffering for both stdout and stderr, preventing pipeline buffering delays.
-      - Use POSIX character class `[[:space:]]` for portability.
-      - If preserving exit code across pipes matters, consider: `set -o pipefail`.

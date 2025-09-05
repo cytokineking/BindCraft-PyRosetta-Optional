@@ -126,13 +126,6 @@ if [ ${#missing_packages[@]} -ne 0 ]; then
     exit 1
 fi
 
-# Clean up conda's OpenCL packages to prevent OpenMM segfaults
-echo -e "Cleaning up conda OpenCL packages to prevent OpenMM conflicts\n"
-$pkg_manager remove -y ocl-icd opencl-headers cuda-opencl cuda-opencl-dev 2>/dev/null || true
-$pkg_manager install -y -c conda-forge ocl-icd-system || true
-rm -f "$CONDA_PREFIX/lib/libOpenCL.so"* 2>/dev/null || true
-echo -e "OpenCL cleanup completed\n"
-
 # install ColabDesign
 echo -e "Installing ColabDesign\n"
 pip3 install git+https://github.com/sokrypton/ColabDesign.git --no-deps || { echo -e "Error: Failed to install ColabDesign"; exit 1; }

@@ -319,6 +319,6 @@ def pr_relax(pdb_file, relaxed_pdb_path, use_pyrosetta=True):
     else:
         # Quiet: direct OpenMM fallback without extra banner
         openmm_gpu = True # Default to True for GPU usage in OpenMM fallback
-        # Run OpenMM relax in a fresh subprocess to fully reset OpenCL context per run
+        # Run OpenMM relax in a fresh subprocess to fully reset context per run
         alt.openmm_relax_subprocess(pdb_file, relaxed_pdb_path, use_gpu_relax=openmm_gpu)
         

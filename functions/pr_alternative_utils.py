@@ -8,7 +8,7 @@ replication is not possible.
 
 Functions:
     openmm_relax: Structure relaxation using OpenMM
-    openmm_relax_subprocess: Run relax in a fresh process to isolate OpenCL context
+    openmm_relax_subprocess: Run relax in a fresh process to isolate context
     pr_alternative_score_interface: Interface scoring using Biopython
     
 Helper Functions:
@@ -18,9 +18,9 @@ Helper Functions:
     _chain_total_sasa: Calculate total SASA for a chain
 
 Rationale:
-    In long runs we observed sporadic OpenCL context failures after many relax calls,
+    In long runs we observed sporadic context failures after many relax calls,
     consistent with driver/runtime state or memory accumulation. The subprocess helper
-    guarantees full teardown per relax, isolating OpenCL state between runs.
+    guarantees full teardown per relax, isolating state between runs.
 """
 
 import gc
@@ -38,7 +38,7 @@ from .generic_utils import clean_pdb
 from .logging_utils import vprint
 from .biopython_utils import hotspot_residues, biopython_align_all_ca
 
-# OpenMM imports
+# OpenMM imports (CUDA-only)
 import openmm
 from openmm import app, unit, Platform, OpenMMException
 from pdbfixer import PDBFixer
@@ -692,7 +692,7 @@ def openmm_relax(pdb_file_path, output_pdb_path, use_gpu_relax=True,
     Returns
     -------
     platform_name_used : str or None
-        Name of the OpenMM platform actually used (e.g., 'CUDA', 'OpenCL', or 'CPU').
+        Name of the OpenMM platform actually used ('CUDA').
     """
 
     start_time = time.time()
@@ -793,17 +793,8 @@ def openmm_relax(pdb_file_path, output_pdb_path, use_gpu_relax=True,
         simulation = None
         platform_name_used = None # To store the name of the successfully used platform
 
-        platform_order = []
-        if use_gpu_relax:
-            # Prefer OpenCL, then CUDA (override with env if needed)
-            env_order = os.environ.get('OPENMM_PLATFORM_ORDER')
-            if env_order:
-                platform_order = [p.strip() for p in env_order.split(',') if p.strip()]
-            else:
-                platform_order.extend(['OpenCL', 'CUDA'])
-        else:
-            # Explicit CPU-only path if GPU is not requested
-            platform_order.append('CPU')
+        # CUDA-only: always attempt CUDA and fail otherwise
+        platform_order = ['CUDA']
 
         last_exception = None
         for p_name_to_try in platform_order:
@@ -820,8 +811,6 @@ def openmm_relax(pdb_file_path, output_pdb_path, use_gpu_relax=True,
                     current_platform_obj = Platform.getPlatformByName(p_name_to_try)
                     if p_name_to_try == 'CUDA':
                         current_properties = {'CudaPrecision': 'mixed'}
-                    elif p_name_to_try == 'OpenCL':
-                        current_properties = {'OpenCLPrecision': 'single'}
 
                     simulation = app.Simulation(
                         fixer.topology, system, integrator, current_platform_obj, current_properties
@@ -845,7 +834,7 @@ def openmm_relax(pdb_file_path, output_pdb_path, use_gpu_relax=True,
 
         if simulation is None:
             final_error_msg = (
-                f"FATAL: Could not initialize OpenMM Simulation with any GPU platform after trying {', '.join(platform_order)}."
+                f"FATAL: Could not initialize OpenMM Simulation with CUDA."
             )
             # Prefer raising the last captured exception if present
             if last_exception is not None:
@@ -1037,7 +1026,7 @@ def openmm_relax(pdb_file_path, output_pdb_path, use_gpu_relax=True,
             return None
 
 def openmm_relax_subprocess(pdb_file_path, output_pdb_path, use_gpu_relax=True, timeout=None, max_attempts=3):
-    """Run openmm_relax in a fresh Python process to fully reset OpenCL context per run.
+    """Run openmm_relax in a fresh Python process to fully reset context per run.
     Retries if the child fell back to copying input (soft failure) or if the child crashes (hard failure).
     Streams child logs to parent stdout/stderr so DEBUG lines are visible.
     """

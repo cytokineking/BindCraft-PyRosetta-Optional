@@ -24,12 +24,7 @@ RUN apt-get update && \
       unzip && \
     rm -rf /var/lib/apt/lists/*
 
-# Install OpenCL ICD loader and tools; register NVIDIA OpenCL ICD
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ocl-icd-libopencl1 clinfo && \
-    rm -rf /var/lib/apt/lists/*
-RUN mkdir -p /etc/OpenCL/vendors && \
-    echo "libnvidia-opencl.so.1" > /etc/OpenCL/vendors/nvidia.icd
+## CUDA-only image
 
 # Install Miniforge (Conda) at /miniforge3
 ENV CONDA_DIR=/miniforge3
@@ -69,9 +64,9 @@ ENV PATH=${CONDA_DIR}/envs/BindCraft/bin:${CONDA_DIR}/bin:${PATH} \
     PYTHONUNBUFFERED=1 \
     BINDCRAFT_HOME=/app
 
-# Prefer OpenCL (fallback to CUDA) in OpenMM by default
-ENV OPENMM_PLATFORM_ORDER=OpenCL,CUDA \
-    OPENMM_DEFAULT_PLATFORM=OpenCL
+# Prefer CUDA in OpenMM by default (CUDA-only)
+ENV OPENMM_PLATFORM_ORDER=CUDA \
+    OPENMM_DEFAULT_PLATFORM=CUDA
 
 # Modal-compatible entrypoint that execs args
 COPY docker-entrypoint.sh /usr/local/bin/bindcraft-entrypoint.sh
