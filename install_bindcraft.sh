@@ -79,10 +79,26 @@ echo -e "Using JAX/jaxlib version 0.6.0 for stability\n"
 if [ "$install_pyrosetta" = true ]; then
     echo -e "Installing with PyRosetta\n"
     if [ -n "$cuda" ]; then
+        # Install base packages first, then add CUDA jaxlib specifically
+        $pkg_manager install \
+            $BASE_PACKAGES \
+            pyrosetta \
+            "jax=0.6.0" \
+            cuda-nvcc \
+            cudnn \
+            cuda-toolkit=$cuda \
+            -c conda-forge \
+            -c nvidia \
+            -c "https://conda.rosettacommons.org" \
+            -y \
+            || { echo -e "Error: Failed to install base conda packages with PyRosetta."; exit 1; }
+        
+        # Install CUDA-enabled jaxlib separately with explicit CUDA override
         CONDA_OVERRIDE_CUDA="$cuda" $pkg_manager install \
-            $BASE_PACKAGES pyrosetta "jaxlib=0.6.0=*cuda*" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
-            -c conda-forge -c nvidia -c "https://conda.rosettacommons.org" -y \
-            || { echo -e "Error: Failed to install conda packages with PyRosetta."; exit 1; }
+            "jaxlib=0.6.0=*cuda*" \
+            -c conda-forge \
+            -y \
+            || { echo -e "Error: Failed to install CUDA-enabled jaxlib"; exit 1; }
     else
         $pkg_manager install \
             $BASE_PACKAGES pyrosetta "jaxlib=0.6.0" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
@@ -92,10 +108,24 @@ if [ "$install_pyrosetta" = true ]; then
 else
     echo -e "Installing without PyRosetta\n"
     if [ -n "$cuda" ]; then
+        # Install base packages first, then add CUDA jaxlib specifically
+        $pkg_manager install \
+            $BASE_PACKAGES \
+            "jax=0.6.0" \
+            cuda-nvcc \
+            cudnn \
+            cuda-toolkit=$cuda \
+            -c conda-forge \
+            -c nvidia \
+            -y \
+            || { echo -e "Error: Failed to install base conda packages without PyRosetta."; exit 1; }
+        
+        # Install CUDA-enabled jaxlib separately with explicit CUDA override
         CONDA_OVERRIDE_CUDA="$cuda" $pkg_manager install \
-            $BASE_PACKAGES "jaxlib=0.6.0" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
-            -c conda-forge -c nvidia -y \
-            || { echo -e "Error: Failed to install conda packages without PyRosetta."; exit 1; }
+            "jaxlib=0.6.0=*cuda*" \
+            -c conda-forge \
+            -y \
+            || { echo -e "Error: Failed to install CUDA-enabled jaxlib"; exit 1; }
     else
         $pkg_manager install \
             $BASE_PACKAGES "jaxlib=0.6.0" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
