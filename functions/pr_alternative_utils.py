@@ -38,10 +38,8 @@ from .generic_utils import clean_pdb
 from .logging_utils import vprint
 from .biopython_utils import hotspot_residues, biopython_align_all_ca
 
-# OpenMM imports (CUDA-only)
-import openmm
-from openmm import app, unit, Platform, OpenMMException
-from pdbfixer import PDBFixer
+# OpenMM and PDBFixer are imported lazily inside openmm_relax to avoid
+# loading GPU/driver plugins at module import time.
 
 # Bio.PDB imports
 from Bio.PDB import PDBParser, PDBIO, Polypeptide, Structure, Model
@@ -696,6 +694,19 @@ def openmm_relax(pdb_file_path, output_pdb_path, use_gpu_relax=True,
     """
 
     start_time = time.time()
+
+    # Ensure CUDA-only defaults before importing OpenMM to minimize plugin issues
+    if 'OPENMM_PLATFORM_ORDER' not in os.environ:
+        os.environ['OPENMM_PLATFORM_ORDER'] = 'CUDA'
+    if 'OPENMM_DEFAULT_PLATFORM' not in os.environ:
+        os.environ['OPENMM_DEFAULT_PLATFORM'] = 'CUDA'
+
+    # Lazy import OpenMM and PDBFixer now that env is configured
+    global openmm, app, unit, Platform, OpenMMException
+    from pdbfixer import PDBFixer
+    import openmm
+    from openmm import app, unit, Platform, OpenMMException
+
     basename = os.path.basename(pdb_file_path)
     vprint(f"[OpenMM-Relax] Initiating relax for {basename}")
     best_energy = float('inf') * unit.kilojoule_per_mole # Initialize with units
