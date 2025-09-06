@@ -1,4 +1,11 @@
-FROM nvidia/cuda:12.6.1-cudnn-runtime-ubuntu22.04
+# Single CUDA argument: choose the CUDA base image version (patch allowed)
+# Examples:
+#  - 12.6.1  → uses nvidia/cuda:12.6.1-cudnn-runtime-ubuntu22.04 and installs toolkit 12.6
+#  - 12.8.0  → uses nvidia/cuda:12.8.0-cudnn-runtime-ubuntu22.04 and installs toolkit 12.8
+#  - 12.4.1  → uses nvidia/cuda:12.4.1-cudnn8-runtime-ubuntu22.04 and installs toolkit 12.4
+ARG CUDA_VER=12.6.1
+FROM nvidia/cuda:${CUDA_VER}-cudnn-runtime-ubuntu22.04
+ENV CUDA_VER=${CUDA_VER}
 
 LABEL org.opencontainers.image.source="https://github.com/cytokineking/FreeBindCraft"
 LABEL org.opencontainers.image.description="FreeBindCraft GPU (no PyRosetta)"
@@ -51,13 +58,15 @@ RUN chmod +x /app/functions/dssp || true && \
     chmod +x /app/functions/sc || true
 
 # Build environment and download AF2 weights without PyRosetta
-# Match CUDA to base image; installer pins jax/jaxlib=0.6.0
+# CUDA toolkit version is derived automatically as major.minor from CUDA_VER
 # Allow toggling PyRosetta install at build-time
 ARG WITH_PYROSETTA=false
 ENV WITH_PYROSETTA=${WITH_PYROSETTA}
 RUN bash -lc 'source ${CONDA_DIR}/etc/profile.d/conda.sh && \
+    # Derive major.minor (e.g., 12.6) from CUDA_VER (e.g., 12.6.1)
+    CUDA_MAJ_MIN=$(echo "$CUDA_VER" | awk -F. '{print $1"."$2}'); \
     EXTRA=""; if [ "${WITH_PYROSETTA}" != "true" ]; then EXTRA="--no-pyrosetta"; fi; \
-    bash /app/install_bindcraft.sh --pkg_manager conda --cuda 12.6 ${EXTRA}'
+    bash /app/install_bindcraft.sh --pkg_manager conda --cuda ${CUDA_MAJ_MIN} ${EXTRA}'
 
 # Default environment
 ENV PATH=${CONDA_DIR}/envs/BindCraft/bin:${CONDA_DIR}/bin:${PATH} \
