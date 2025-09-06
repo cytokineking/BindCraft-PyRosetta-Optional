@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.6.0-cudnn9-runtime-ubuntu22.04
 
 LABEL org.opencontainers.image.source="https://github.com/cytokineking/FreeBindCraft"
 LABEL org.opencontainers.image.description="FreeBindCraft GPU (no PyRosetta)"
@@ -57,7 +57,7 @@ ARG WITH_PYROSETTA=false
 ENV WITH_PYROSETTA=${WITH_PYROSETTA}
 RUN bash -lc 'source ${CONDA_DIR}/etc/profile.d/conda.sh && \
     EXTRA=""; if [ "${WITH_PYROSETTA}" != "true" ]; then EXTRA="--no-pyrosetta"; fi; \
-    bash /app/install_bindcraft.sh --pkg_manager conda --cuda 12.1 ${EXTRA}'
+    bash /app/install_bindcraft.sh --pkg_manager conda --cuda 12.6 ${EXTRA}'
 
 # Default environment
 ENV PATH=${CONDA_DIR}/envs/BindCraft/bin:${CONDA_DIR}/bin:${PATH} \
