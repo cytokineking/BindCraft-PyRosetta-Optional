@@ -62,8 +62,7 @@ RUN chmod +x /app/functions/dssp || true && \
 # Allow toggling PyRosetta install at build-time
 ARG WITH_PYROSETTA=false
 ENV WITH_PYROSETTA=${WITH_PYROSETTA}
-RUN ["bash", "-lc", 
-     "source ${CONDA_DIR}/etc/profile.d/conda.sh && CUDA_MAJ_MIN=${CUDA_VER%.*}; EXTRA=\"\"; if [ \"${WITH_PYROSETTA}\" != \"true\" ]; then EXTRA=\"--no-pyrosetta\"; fi; bash /app/install_bindcraft.sh --pkg_manager conda --cuda ${CUDA_MAJ_MIN} ${EXTRA}"]
+RUN ["bash","-lc","source ${CONDA_DIR}/etc/profile.d/conda.sh; CUDA_MAJ_MIN=${CUDA_VER%.*}; EXTRA=\"\"; if [ \"${WITH_PYROSETTA}\" != \"true\" ]; then EXTRA=\"--no-pyrosetta\"; fi; bash /app/install_bindcraft.sh --pkg_manager conda --cuda ${CUDA_MAJ_MIN} ${EXTRA}"]
 
 # Default environment
 ENV PATH=${CONDA_DIR}/envs/BindCraft/bin:${CONDA_DIR}/bin:${PATH} \
