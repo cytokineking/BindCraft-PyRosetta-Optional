@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.6.0-cudnn9-runtime-ubuntu22.04
+FROM nvidia/cuda:12.6-cudnn8-runtime-ubuntu22.04
 
 LABEL org.opencontainers.image.source="https://github.com/cytokineking/FreeBindCraft"
 LABEL org.opencontainers.image.description="FreeBindCraft GPU (no PyRosetta)"
