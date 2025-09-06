@@ -93,7 +93,7 @@ else
     echo -e "Installing without PyRosetta\n"
     if [ -n "$cuda" ]; then
         CONDA_OVERRIDE_CUDA="$cuda" $pkg_manager install \
-            $BASE_PACKAGES "jaxlib=0.6.0=*cuda*" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
+            $BASE_PACKAGES "jaxlib=0.6.0" "jax=0.6.0" cuda-nvcc cudnn cuda-toolkit=$cuda\
             -c conda-forge -c nvidia -y \
             || { echo -e "Error: Failed to install conda packages without PyRosetta."; exit 1; }
     else

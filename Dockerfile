@@ -38,6 +38,7 @@ ENV PATH=${CONDA_DIR}/bin:${PATH}
 # Improve conda robustness and cleanup
 RUN conda config --set channel_priority strict && \
     conda config --set always_yes yes && \
+    conda config --set subdir linux-64 && \
     conda update -n base -c conda-forge conda && \
     conda clean -afy
 
