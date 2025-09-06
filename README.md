@@ -138,32 +138,19 @@ Run FreeBindCraft in a GPU-enabled Docker container (either build locally or pul
 
 Build without PyRosetta (default):
 ```bash
-# Defaults: CUDA base image tag 12.6.1-cudnn-runtime-ubuntu22.04, CUDA toolkit 12.6
+# Default (CUDA 12.6.1 base; installs CUDA toolkit 12.6 inside)
 docker build -t freebindcraft:gpu .
 
-# Choose a specific CUDA base image tag and toolkit version
-# Examples (ensure host driver supports chosen CUDA):
-docker build \
-  --build-arg CUDA_IMAGE_TAG=12.8.0-cudnn-runtime-ubuntu22.04 \
-  --build-arg CUDA_TOOLKIT_VER=12.8 \
-  -t freebindcraft:gpu-cuda12.8 .
-
-docker build \
-  --build-arg CUDA_IMAGE_TAG=12.4.1-cudnn8-runtime-ubuntu22.04 \
-  --build-arg CUDA_TOOLKIT_VER=12.4 \
-  -t freebindcraft:gpu-cuda12.4 .
+# Pick a CUDA version (single argument) – examples:
+docker build --build-arg CUDA_VER=12.8.0 -t freebindcraft:gpu-cuda12.8 .
+docker build --build-arg CUDA_VER=12.4.1 -t freebindcraft:gpu-cuda12.4 .
 ```
 
 Build with PyRosetta:
 ```bash
 docker build --build-arg WITH_PYROSETTA=true -t freebindcraft:pyrosetta .
-
-# With explicit CUDA choices
-docker build \
-  --build-arg WITH_PYROSETTA=true \
-  --build-arg CUDA_IMAGE_TAG=12.8.0-cudnn-runtime-ubuntu22.04 \
-  --build-arg CUDA_TOOLKIT_VER=12.8 \
-  -t freebindcraft:pyrosetta-cuda12.8 .
+# With a specific CUDA version
+docker build --build-arg WITH_PYROSETTA=true --build-arg CUDA_VER=12.8.0 -t freebindcraft:pyrosetta-cuda12.8 .
 ```
 
 Sanity test (OpenMM relax):
