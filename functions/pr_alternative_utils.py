@@ -701,6 +701,32 @@ def openmm_relax(pdb_file_path, output_pdb_path, use_gpu_relax=True,
     if 'OPENMM_DEFAULT_PLATFORM' not in os.environ:
         os.environ['OPENMM_DEFAULT_PLATFORM'] = 'CUDA'
 
+    # Curate OpenMM plugins to CPU+CUDA only to avoid crashing OpenCL plugins
+    if 'OPENMM_PLUGIN_DIR' not in os.environ:
+        try:
+            conda_prefix = os.environ.get('CONDA_PREFIX', '')
+            default_plugins = os.path.join(conda_prefix, 'lib', 'plugins') if conda_prefix else ''
+            tmp_dir = tempfile.mkdtemp(prefix='openmm_cuda_cpu_plugins_')
+            copied = 0
+            candidates = []
+            if default_plugins and os.path.isdir(default_plugins):
+                candidates.append(default_plugins)
+            candidates.extend(['/usr/local/lib', '/usr/lib'])
+            wanted_prefixes = ('libOpenMMCUDA', 'libOpenMMCpu', 'libOpenMMCPU')
+            for base in candidates:
+                try:
+                    for fname in os.listdir(base):
+                        if fname.startswith(wanted_prefixes) and fname.endswith('.so'):
+                            shutil.copy(os.path.join(base, fname), os.path.join(tmp_dir, fname))
+                            copied += 1
+                except Exception:
+                    pass
+            if copied > 0:
+                os.environ['OPENMM_PLUGIN_DIR'] = tmp_dir
+                vprint(f"[OpenMM-Relax] Using curated plugin dir: {tmp_dir} ({copied} libs)")
+        except Exception:
+            pass
+
     # Lazy import OpenMM and PDBFixer now that env is configured
     global openmm, app, unit, Platform, OpenMMException
     from pdbfixer import PDBFixer
